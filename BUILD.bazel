@@ -1,6 +1,7 @@
 load("@gazelle//:def.bzl", "gazelle", "gazelle_binary")
 load("@rules_go//go:def.bzl", "go_binary", "go_library")
-load("@rules_img//img:image.bzl", "image_from_binary")
+load("@rules_img//img:image.bzl", "image_index", "image_manifest")
+load("@rules_img//img:layer.bzl", "layer_from_binary")
 load("@rules_img//img:push.bzl", "image_push")
 
 # gazelle:prefix github.com/aws/rolesanywhere-credential-helper
@@ -39,21 +40,49 @@ go_library(
 )
 
 # ── OCI Image ──────────────────────────────────────────────────────────────
-# Base: debian:12-slim arm64 — provides glibc 2.36, ca-certificates, libdl.
-# The binary only needs glibc's libdl at runtime (miekg/pkcs11 uses -ldl).
-# No libltdl runtime dep required — that is only a test-infra concern.
-# Binary placed at /usr/local/bin/aws_signing_helper (path = "/usr/local/bin/").
-# Runs as uid 65532 (nonroot, matching distroless convention).
-image_from_binary(
-    name = "image",
+# Base: gcr.io/distroless/cc-debian12:nonroot (arm64) — minimal glibc runtime
+# (libc, libgcc, libstdc++, ca-certificates) with no shell or package manager.
+# The binary only needs glibc's libdl at runtime (miekg/pkcs11 uses -ldl);
+# distroless/cc provides exactly that.
+#
+# We use layer_from_binary → image_manifest → image_index explicitly instead
+# of image_from_binary so that:
+#   1. The binary layer is built under --config=cross-arm64 (platform flag set
+#      by the caller), producing the correct arm64 ELF.
+#   2. The image_manifest is annotated with platform=linux/arm64 via the
+#      @zig_sdk//libc_aware/platform:linux_arm64_gnu.2.28 label.
+#   3. image_index wraps the manifest in an OCI image index, so the push
+#      target publishes both the index and its child platform manifest.
+
+layer_from_binary(
+    name = "image.layer",
     binary = ":aws_signing_helper",
-    base = "@debian12_slim_arm64",
     path = "/usr/local/bin/",
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+)
+
+image_manifest(
+    name = "image.manifest",
+    base = "@distroless_cc_arm64",
+    layers = [":image.layer"],
+    platform = "@zig_sdk//libc_aware/platform:linux_arm64_gnu.2.28",
     user = "65532",
+    tags = ["manual"],
+    visibility = ["//visibility:private"],
+)
+
+# image_index wraps the single-platform manifest in an OCI index.
+# Pushing this target publishes:
+#   - the index (application/vnd.oci.image.index.v1+json)
+#   - the linux/arm64 manifest as a child
+image_index(
+    name = "image",
+    manifests = [":image.manifest"],
     visibility = ["//visibility:public"],
 )
 
-# Push :latest tag — used in CI via `bazel run --config=ci //:push`
+# Push :latest tag
 image_push(
     name = "push",
     image = ":image",
@@ -63,16 +92,15 @@ image_push(
     visibility = ["//visibility:public"],
 )
 
-# Push with git-commit SHA tag.
-# stamp="force" makes this always expand workspace status even without --stamp.
-# GIT_COMMIT_SHORT is populated by workspace_status.sh (set via --workspace_status_command).
-# The CI workflow adds --workspace_status_command=./workspace_status.sh for this target.
+# Push with short-SHA tag (no prefix — tag is exactly the 7-char commit SHA).
+# stamp="force" expands GIT_COMMIT_SHORT from workspace_status.sh without
+# requiring --stamp on the bazel run invocation.
 image_push(
     name = "push_sha",
     image = ":image",
     registry = "ghcr.io",
     repository = "bpalermo/aws-signing-helper",
-    tag = "sha-{{.GIT_COMMIT_SHORT}}",
+    tag = "{{.GIT_COMMIT_SHORT}}",
     stamp = "force",
     visibility = ["//visibility:public"],
 )

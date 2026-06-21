@@ -49,16 +49,18 @@ register_toolchains(
 )
 
 # ── Base image for the OCI container ─────────────────────────────────────────
-# debian:12-slim arm64 — provides glibc 2.36, ca-certificates, libdl.
-# Pulled by platform-specific digest for reproducibility.
-# The binary only needs -ldl (miekg/pkcs11 CGO), which is part of glibc.
-# No libltdl7 runtime dep; that was a test-infra concern, not the binary itself.
+# gcr.io/distroless/cc-debian12:nonroot (arm64) — minimal glibc runtime with
+# libc, libgcc, libstdc++, and ca-certificates; no shell or package manager.
+# The :nonroot tag sets the default user to uid 65532 at the image level.
+# Pinned to the platform-specific (arm64) digest for reproducibility.
+# The binary only needs glibc's libdl (-ldl from miekg/pkcs11 CGO), which
+# distroless/cc provides without the overhead of a full debian:12-slim layer.
 pull = use_repo_rule("@rules_img//img:pull.bzl", "pull")
 
 pull(
-    name = "debian12_slim_arm64",
-    digest = "sha256:1663827ae94a92b1f374b5daf5fe2bf55303e7e7c61b84ef9663e654224a5857",
-    registry = "index.docker.io",
-    repository = "library/debian",
-    tag = "12-slim",
+    name = "distroless_cc_arm64",
+    digest = "sha256:f5b66762c0a1ca91ac07c9619c28bad74822a0609d1f5f721decd0066b1f993f",
+    registry = "gcr.io",
+    repository = "distroless/cc-debian12",
+    tag = "nonroot",
 )
