@@ -12,8 +12,8 @@ build:image --config=cross-arm64
 
 # ── CI ───────────────────────────────────────────────────────────────────────
 build:ci --config=cross-arm64
-build:ci --stamp
-build:ci --workspace_status_command=./workspace_status.sh
+# Stamping and workspace status are only used for push_sha (stamp="force").
+# Don't set --stamp globally here; the push_sha target sets stamp="force" itself.
 
 # ── Common ───────────────────────────────────────────────────────────────────
 build --incompatible_enable_cc_toolchain_resolution

@@ -63,14 +63,16 @@ image_push(
     visibility = ["//visibility:public"],
 )
 
-# Push with git-commit SHA tag — used in CI with --stamp to tag by commit.
-# The GIT_COMMIT_SHORT variable is populated by workspace_status.sh.
+# Push with git-commit SHA tag.
+# stamp="force" makes this always expand workspace status even without --stamp.
+# GIT_COMMIT_SHORT is populated by workspace_status.sh (set via --workspace_status_command).
+# The CI workflow adds --workspace_status_command=./workspace_status.sh for this target.
 image_push(
     name = "push_sha",
     image = ":image",
     registry = "ghcr.io",
     repository = "bpalermo/aws-signing-helper",
     tag = "sha-{{.GIT_COMMIT_SHORT}}",
-    stamp = "auto",
+    stamp = "force",
     visibility = ["//visibility:public"],
 )
