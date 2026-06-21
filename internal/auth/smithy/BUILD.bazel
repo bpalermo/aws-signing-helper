@@ -1,0 +1,27 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "smithy",
+    srcs = [
+        "credentials_adapter.go",
+        "v4signer_adapter.go",
+    ],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/internal/auth/smithy",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/context",
+        "//internal/sdk",
+        "@com_github_aws_aws_sdk_go_v2//aws",
+        "@com_github_aws_aws_sdk_go_v2//aws/signer/v4:signer",
+        "@com_github_aws_smithy_go//:smithy-go",
+        "@com_github_aws_smithy_go//auth",
+        "@com_github_aws_smithy_go//logging",
+        "@com_github_aws_smithy_go//transport/http",
+    ],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":smithy",
+    visibility = ["//:__subpackages__"],
+)

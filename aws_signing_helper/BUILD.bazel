@@ -1,0 +1,98 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "aws_signing_helper",
+    srcs = [
+        "cert_store_signer_darwin.go",
+        "cert_store_signer_linux.go",
+        "cert_store_signer_windows.go",
+        "credentials.go",
+        "file_system_signer.go",
+        "mldsa_utils.go",
+        "pkcs11_signer.go",
+        "pkcs8_utils.go",
+        "serve.go",
+        "signer.go",
+        "test_utils.go",
+        "tpm_signer.go",
+        "tpm_signer_helper_other.go",
+        "tpm_signer_helper_windows.go",
+        "ttl_listener.go",
+        "update.go",
+    ],
+    cgo = True,
+    clinkopts = select({
+        "@rules_go//go/platform:darwin": [
+            "-framework CoreFoundation -framework Security",
+        ],
+        "@rules_go//go/platform:ios": [
+            "-framework CoreFoundation -framework Security",
+        ],
+        "@rules_go//go/platform:windows": [
+            "-lcrypt32 -lncrypt",
+        ],
+        "//conditions:default": [],
+    }),
+    copts = select({
+        "@rules_go//go/platform:darwin": [
+            "-x objective-c",
+        ],
+        "@rules_go//go/platform:ios": [
+            "-x objective-c",
+        ],
+        "//conditions:default": [],
+    }),
+    importpath = "github.com/aws/rolesanywhere-credential-helper/aws_signing_helper",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//rolesanywhere",
+        "@com_github_aws_aws_sdk_go_v2//aws",
+        "@com_github_aws_aws_sdk_go_v2//aws/arn",
+        "@com_github_aws_aws_sdk_go_v2//aws/signer/v4:signer",
+        "@com_github_aws_aws_sdk_go_v2//aws/transport/http",
+        "@com_github_aws_aws_sdk_go_v2_config//:config",
+        "@com_github_aws_smithy_go//middleware",
+        "@com_github_aws_smithy_go//transport/http",
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa44",
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa65",
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa87",
+        "@com_github_google_go_tpm//tpm2",
+        "@com_github_google_go_tpm//tpmutil",
+        "@com_github_miekg_pkcs11//:pkcs11",
+        "@com_github_stefanberger_go_pkcs11uri//:go-pkcs11uri",
+        "@org_golang_x_crypto//pbkdf2",
+        "@org_golang_x_crypto//pkcs12",
+        "@org_golang_x_crypto//scrypt",
+        "@org_golang_x_net//ipv4",
+        "@org_golang_x_net//ipv6",
+        "@org_golang_x_term//:term",
+    ] + select({
+        "@rules_go//go/platform:windows": [
+            "@org_golang_x_sys//windows",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":aws_signing_helper",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "aws_signing_helper_test",
+    srcs = [
+        "mldsa_utils_test.go",
+        "pkcs11_signer_test.go",
+        "serve_test.go",
+        "signer_test.go",
+        "tpm_signer_test.go",
+    ],
+    embed = [":aws_signing_helper"],
+    deps = [
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa44",
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa65",
+        "@com_github_cloudflare_circl//sign/mldsa/mldsa87",
+    ],
+)

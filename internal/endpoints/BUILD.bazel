@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "endpoints",
+    srcs = ["endpoints.go"],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/internal/endpoints",
+    visibility = ["//:__subpackages__"],
+    deps = ["@com_github_aws_aws_sdk_go_v2//aws"],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":endpoints",
+    visibility = ["//:__subpackages__"],
+)

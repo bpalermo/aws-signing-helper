@@ -1,0 +1,17 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "awsrulesfn",
+    srcs = [
+        "partition.go",
+        "partitions.go",
+    ],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/internal/endpoints/awsrulesfn",
+    visibility = ["//:__subpackages__"],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":awsrulesfn",
+    visibility = ["//:__subpackages__"],
+)

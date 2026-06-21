@@ -1,0 +1,21 @@
+# ── Cross-compile configuration ─────────────────────────────────────────────
+# Build the arm64 binary on the amd64 host using hermetic zig CC.
+# The glibc 2.28 target ensures ARMv8.0 (Pi-class) compatibility.
+build:cross-arm64 --platforms=@zig_sdk//libc_aware/platform:linux_arm64_gnu.2.28
+
+# CGO is required; enable it explicitly for cross-compile.
+build:cross-arm64 --@rules_go//go/config:pure=false
+
+# ── Image build config ───────────────────────────────────────────────────────
+# Used when building/pushing the OCI image target.
+build:image --config=cross-arm64
+
+# ── CI ───────────────────────────────────────────────────────────────────────
+build:ci --config=cross-arm64
+build:ci --stamp
+build:ci --workspace_status_command=./workspace_status.sh
+
+# ── Common ───────────────────────────────────────────────────────────────────
+build --incompatible_enable_cc_toolchain_resolution
+# hermetic_cc_toolchain (zig) needs /tmp for its cache in the sandbox.
+build:linux --sandbox_add_mount_pair=/tmp

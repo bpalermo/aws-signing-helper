@@ -1,0 +1,33 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "cmd",
+    srcs = [
+        "credential_process.go",
+        "credentials.go",
+        "read_certificate_data.go",
+        "root.go",
+        "serve.go",
+        "sign_string.go",
+        "update.go",
+        "version.go",
+    ],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/cmd",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//aws_signing_helper",
+        "@com_github_spf13_cobra//:cobra",
+    ],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":cmd",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "cmd_test",
+    srcs = ["credentials_test.go"],
+    embed = [":cmd"],
+)

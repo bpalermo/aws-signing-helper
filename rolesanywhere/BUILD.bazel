@@ -1,0 +1,65 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "rolesanywhere",
+    srcs = [
+        "api_client.go",
+        "api_op_CreateSession.go",
+        "auth.go",
+        "deserializers.go",
+        "endpoints.go",
+        "go_module_metadata.go",
+        "options.go",
+        "serializers.go",
+        "validators.go",
+    ],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/rolesanywhere",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//internal/auth",
+        "//internal/auth/smithy",
+        "//internal/configsources",
+        "//internal/endpoints",
+        "//internal/endpoints/awsrulesfn",
+        "//internal/middleware",
+        "//rolesanywhere/internal/endpoints",
+        "//rolesanywhere/types",
+        "@com_github_aws_aws_sdk_go_v2//aws",
+        "@com_github_aws_aws_sdk_go_v2//aws/defaults",
+        "@com_github_aws_aws_sdk_go_v2//aws/middleware",
+        "@com_github_aws_aws_sdk_go_v2//aws/protocol/restjson",
+        "@com_github_aws_aws_sdk_go_v2//aws/retry",
+        "@com_github_aws_aws_sdk_go_v2//aws/signer/v4:signer",
+        "@com_github_aws_aws_sdk_go_v2//aws/transport/http",
+        "@com_github_aws_smithy_go//:smithy-go",
+        "@com_github_aws_smithy_go//auth",
+        "@com_github_aws_smithy_go//document",
+        "@com_github_aws_smithy_go//encoding/httpbinding",
+        "@com_github_aws_smithy_go//encoding/json",
+        "@com_github_aws_smithy_go//endpoints",
+        "@com_github_aws_smithy_go//io",
+        "@com_github_aws_smithy_go//logging",
+        "@com_github_aws_smithy_go//metrics",
+        "@com_github_aws_smithy_go//middleware",
+        "@com_github_aws_smithy_go//ptr",
+        "@com_github_aws_smithy_go//tracing",
+        "@com_github_aws_smithy_go//transport/http",
+    ],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":rolesanywhere",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "rolesanywhere_test",
+    srcs = ["api_client_test.go"],
+    embed = [":rolesanywhere"],
+    deps = [
+        "@com_github_aws_aws_sdk_go_v2//aws",
+        "@com_github_aws_smithy_go//middleware",
+        "@com_github_aws_smithy_go//transport/http",
+    ],
+)

@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "context",
+    srcs = ["context.go"],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/internal/context",
+    visibility = ["//:__subpackages__"],
+    deps = ["@com_github_aws_smithy_go//middleware"],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":context",
+    visibility = ["//:__subpackages__"],
+)

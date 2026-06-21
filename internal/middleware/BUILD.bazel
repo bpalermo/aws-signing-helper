@@ -1,0 +1,18 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "middleware",
+    srcs = ["middleware.go"],
+    importpath = "github.com/aws/rolesanywhere-credential-helper/internal/middleware",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//internal/context",
+        "@com_github_aws_smithy_go//middleware",
+    ],
+)
+
+alias(
+    name = "go_default_library",
+    actual = ":middleware",
+    visibility = ["//:__subpackages__"],
+)
