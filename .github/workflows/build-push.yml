@@ -44,5 +44,5 @@ jobs:
       - name: Push :sha-<commit> to ghcr.io
         run: |
           bazel run --config=ci \
-            --workspace_status_command="${GITHUB_WORKSPACE}/workspace_status.sh" \
+            --workspace_status_command="${GITHUB_WORKSPACE}/bazel/workspace_status.sh" \
             //:push_sha
